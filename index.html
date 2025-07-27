@@ -1,0 +1,1194 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra Advanced Snake Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: bordfer-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #000000, #0a0444, #191969);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow: auto; /* Changed to auto for scrollbars */
+            color: white;
+            padding: 20px;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .game-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* Made smaller */
+            padding: 12px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 1.8rem; /* Smaller font */
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+            margin: 0;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .help-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .help-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .stat-box {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+        
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .game-board {
+            position: relative;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            margin-bottom: 12px;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+        }
+        
+        button {
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            font-weight: bold;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        #pauseBtn {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        }
+        
+        #restartBtn {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 10;
+            border-radius: 10px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .game-over.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .game-over h2 {
+            font-size: 2.5rem;
+            color: #ff0055;
+            margin-bottom: 15px;
+            text-shadow: 0 0 15px rgba(255, 0, 85, 0.7);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .game-over p {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+        }
+        
+        .final-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .final-stat {
+            text-align: center;
+        }
+        
+        .final-stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #00ffff;
+        }
+        
+        .level-indicator {
+            text-align: center;
+            margin: 8px 0;
+            font-size: 1rem;
+            color: white;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .modal-content {
+            background: rgba(30, 30, 50, 0.95);
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .modal-header h2 {
+            color: #00ffff;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.3rem;
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .instructions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .instruction-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+        
+        .key {
+            background: rgba(0, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            border: 1px solid rgba(0, 255, 255, 0.5);
+            min-width: 35px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .power-ups-info {
+            margin-top: 15px;
+        }
+        
+        .power-ups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .power-up-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .power-up-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        @media (max-width: 500px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .final-stats {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .modal-content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🐍 ULTRA ADVANCED SNAKE</h1>
+            <div class="help-btn" id="helpBtn">?</div>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">CURRENT SCORE</div>
+                <div id="currentScore" class="stat-value">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">TOP SCORE</div>
+                <div id="topScore" class="stat-value">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">LEVEL</div>
+                <div id="level" class="stat-value">1</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">LENGTH</div>
+                <div id="length" class="stat-value">3</div>
+            </div>
+        </div>
+        
+        <div class="game-board">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <div id="gameOver" class="game-over">
+                <h2>GAME OVER!</h2>
+                <div class="final-stats">
+                    <div class="final-stat">
+                        <div>FINAL SCORE</div>
+                        <div id="finalScore" class="final-stat-value">0</div>
+                    </div>
+                    <div class="final-stat">
+                        <div>LEVEL REACHED</div>
+                        <div id="finalLevel" class="final-stat-value">1</div>
+                    </div>
+                </div>
+                <button id="playAgainBtn">PLAY AGAIN</button>
+            </div>
+        </div>
+        
+        <div class="level-indicator">
+            Level <span id="currentLevel">1</span> - Speed: <span id="currentSpeed">Normal</span>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">START GAME</button>
+            <button id="pauseBtn">PAUSE</button>
+            <button id="restartBtn">RESTART</button>
+        </div>
+    </div>
+    
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>HOW TO PLAY</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            
+            <div class="instructions-grid">
+                <div class="instruction-item">
+                    <div class="key">↑</div>
+                    <div>Move Up</div>
+                </div>
+                <div class="instruction-item">
+                    <div class="key">↓</div>
+                    <div>Move Down</div>
+                </div>
+                <div class="instruction-item">
+                    <div class="key">←</div>
+                    <div>Move Left</div>
+                </div>
+                <div class="instruction-item">
+                    <div class="key">→</div>
+                    <div>Move Right</div>
+                </div>
+                <div class="instruction-item">
+                    <div class="key">SPACE</div>
+                    <div>Pause/Resume</div>
+                </div>
+                <div class="instruction-item">
+                    <div class="key">R</div>
+                    <div>Restart Game</div>
+                </div>
+            </div>
+            
+            <p style="text-align: center; margin: 15px 0;">
+                Eat food to grow and score points. Avoid walls and yourself!
+            </p>
+            
+            <div class="power-ups-info">
+                <h3>POWER-UPS</h3>
+                <div class="power-ups-grid">
+                    <div class="power-up-info">
+                        <div class="power-up-icon" style="background: linear-gradient(45deg, #ff0000, #ff9900);">⚡</div>
+                        <div>Speed Boost</div>
+                    </div>
+                    <div class="power-up-info">
+                        <div class="power-up-icon" style="background: linear-gradient(45deg, #0000ff, #00ffff);">🐢</div>
+                        <div>Slow Down</div>
+                    </div>
+                    <div class="power-up-info">
+                        <div class="power-up-icon" style="background: linear-gradient(45deg, #ffff00, #ff00ff);">💎</div>
+                        <div>Extra Points</div>
+                    </div>
+                    <div class="power-up-info">
+                        <div class="power-up-icon" style="background: linear-gradient(45deg, #00ff00, #008000);">🛡️</div>
+                        <div>Shield</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game variables
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const currentScoreElement = document.getElementById('currentScore');
+        const topScoreElement = document.getElementById('topScore');
+        const levelElement = document.getElementById('level');
+        const lengthElement = document.getElementById('length');
+        const finalScoreElement = document.getElementById('finalScore');
+        const finalLevelElement = document.getElementById('finalLevel');
+        const gameOverElement = document.getElementById('gameOver');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const currentLevelElement = document.getElementById('currentLevel');
+        const currentSpeedElement = document.getElementById('currentSpeed');
+        const helpBtn = document.getElementById('helpBtn');
+        const helpModal = document.getElementById('helpModal');
+        const closeModal = document.getElementById('closeModal');
+        
+        // Game settings
+        const gridSize = 15;
+        const tileCount = canvas.width / gridSize;
+        let baseSpeed = 120; // milliseconds between updates
+        let speed = baseSpeed;
+        
+        // Game state
+        let snake = [];
+        let food = {};
+        let powerUps = [];
+        let dx = 0; // horizontal velocity
+        let dy = 0; // vertical velocity
+        let score = 0;
+        let topScore = localStorage.getItem('ultraSnakeTopScore') || 0;
+        let foodEaten = 0;
+        let level = 1;
+        let gameRunning = false;
+        let gamePaused = false;
+        let gameLoop;
+        let speedBoostActive = false;
+        let slowDownActive = false;
+        let shieldActive = false;
+        let shieldTimer = 0;
+        let particles = [];
+        let growthPending = 0; // Number of segments to add
+        
+        // Power-up types
+        const POWER_UP_TYPES = {
+            SPEED_BOOST: 'speed',
+            SLOW_DOWN: 'slow',
+            EXTRA_POINTS: 'points',
+            SHIELD: 'shield'
+        };
+        
+        // Initialize game
+        function initGame() {
+            // Initialize snake
+            snake = [
+                {x: 10, y: 10}, // head
+                {x: 9, y: 10},
+                {x: 8, y: 10}  // tail
+            ];
+            
+            // Place first food
+            placeFood();
+            
+            // Reset power-ups
+            powerUps = [];
+            
+            // Reset direction
+            dx = 1;
+            dy = 0;
+            
+            // Reset game state
+            score = 0;
+            foodEaten = 0;
+            level = 1;
+            speed = baseSpeed;
+            speedBoostActive = false;
+            slowDownActive = false;
+            shieldActive = false;
+            shieldTimer = 0;
+            particles = [];
+            growthPending = 0;
+            
+            // Update UI
+            currentScoreElement.textContent = score;
+            topScoreElement.textContent = topScore;
+            levelElement.textContent = level;
+            lengthElement.textContent = snake.length;
+            currentLevelElement.textContent = level;
+            currentSpeedElement.textContent = 'Normal';
+            
+            // Hide game over screen
+            gameOverElement.classList.remove('show');
+        }
+        
+        // Place food at random location
+        function placeFood() {
+            food = {
+                x: Math.floor(Math.random() * tileCount),
+                y: Math.floor(Math.random() * tileCount)
+            };
+            
+            // Make sure food doesn't appear on snake or power-ups
+            for (let segment of snake) {
+                if (segment.x === food.x && segment.y === food.y) {
+                    placeFood();
+                    return;
+                }
+            }
+            
+            for (let powerUp of powerUps) {
+                if (powerUp.x === food.x && powerUp.y === food.y) {
+                    placeFood();
+                    return;
+                }
+            }
+        }
+        
+        // Place power-up
+        function placePowerUp() {
+            if (Math.random() < 0.3 && powerUps.length < 2) { // 30% chance and max 2 power-ups
+                const types = Object.values(POWER_UP_TYPES);
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                const powerUp = {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCount),
+                    type: type,
+                    timer: 300 // disappears after 300 frames
+                };
+                
+                // Make sure power-up doesn't appear on snake or food
+                let onSnake = false;
+                for (let segment of snake) {
+                    if (segment.x === powerUp.x && segment.y === powerUp.y) {
+                        onSnake = true;
+                        break;
+                    }
+                }
+                
+                if (onSnake || (powerUp.x === food.x && powerUp.y === food.y)) {
+                    placePowerUp();
+                    return;
+                }
+                
+                powerUps.push(powerUp);
+            }
+        }
+        
+        // Create particle effect
+        function createParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x * gridSize + gridSize/2,
+                    y: y * gridSize + gridSize/2,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    color: color,
+                    life: 30
+                });
+            }
+        }
+        
+        // Update particles
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+        
+        // Draw particles
+        function drawParticles() {
+            for (const p of particles) {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life / 30;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+        
+        // Draw game elements
+        function draw() {
+            // Clear canvas with fade effect
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < tileCount; i++) {
+                for (let j = 0; j < tileCount; j++) {
+                    ctx.strokeRect(i * gridSize, j * gridSize, gridSize, gridSize);
+                }
+            }
+            
+            // Draw particles
+            drawParticles();
+            
+            // Draw snake
+            snake.forEach((segment, index) => {
+                let gradient;
+                
+                if (index === 0) {
+                    // Draw head with special effect
+                    gradient = ctx.createRadialGradient(
+                        segment.x * gridSize + gridSize/2,
+                        segment.y * gridSize + gridSize/2,
+                        0,
+                        segment.x * gridSize + gridSize/2,
+                        segment.y * gridSize + gridSize/2,
+                        gridSize
+                    );
+                    gradient.addColorStop(0, '#00ff00');
+                    gradient.addColorStop(1, '#008000');
+                } else {
+                    // Draw body with gradient
+                    gradient = ctx.createLinearGradient(
+                        segment.x * gridSize, 
+                        segment.y * gridSize, 
+                        segment.x * gridSize + gridSize, 
+                        segment.y * gridSize + gridSize
+                    );
+                    gradient.addColorStop(0, '#00cc00');
+                    gradient.addColorStop(1, '#006600');
+                }
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 1, gridSize - 1);
+                
+                // Add rounded corners
+                ctx.beginPath();
+                ctx.roundRect(
+                    segment.x * gridSize, 
+                    segment.y * gridSize, 
+                    gridSize - 1, 
+                    gridSize - 1, 
+                    4
+                );
+                ctx.fill();
+                
+                // Draw eyes on head
+                if (index === 0) {
+                    ctx.fillStyle = 'black';
+                    // Eye positions based on direction
+                    let eye1X, eye1Y, eye2X, eye2Y;
+                    
+                    if (dx === 1) { // Right
+                        eye1X = segment.x * gridSize + gridSize - 5;
+                        eye1Y = segment.y * gridSize + 4;
+                        eye2X = segment.x * gridSize + gridSize - 5;
+                        eye2Y = segment.y * gridSize + gridSize - 7;
+                    } else if (dx === -1) { // Left
+                        eye1X = segment.x * gridSize + 3;
+                        eye1Y = segment.y * gridSize + 4;
+                        eye2X = segment.x * gridSize + 3;
+                        eye2Y = segment.y * gridSize + gridSize - 7;
+                    } else if (dy === 1) { // Down
+                        eye1X = segment.x * gridSize + 4;
+                        eye1Y = segment.y * gridSize + gridSize - 5;
+                        eye2X = segment.x * gridSize + gridSize - 7;
+                        eye2Y = segment.y * gridSize + gridSize - 5;
+                    } else { // Up
+                        eye1X = segment.x * gridSize + 4;
+                        eye1Y = segment.y * gridSize + 3;
+                        eye2X = segment.x * gridSize + gridSize - 7;
+                        eye2Y = segment.y * gridSize + 3;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.arc(eye1X, eye1Y, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(eye2X, eye2Y, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+            
+            // Draw shield if active
+            if (shieldActive) {
+                ctx.strokeStyle = '#00ffff';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.arc(
+                    snake[0].x * gridSize + gridSize/2,
+                    snake[0].y * gridSize + gridSize/2,
+                    gridSize,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            // Draw food
+            const foodGradient = ctx.createRadialGradient(
+                food.x * gridSize + gridSize/2,
+                food.y * gridSize + gridSize/2,
+                1,
+                food.x * gridSize + gridSize/2,
+                food.y * gridSize + gridSize/2,
+                gridSize/2
+            );
+            foodGradient.addColorStop(0, '#ff9900');
+            foodGradient.addColorStop(1, '#ff0000');
+            
+            ctx.fillStyle = foodGradient;
+            ctx.beginPath();
+            ctx.arc(
+                food.x * gridSize + gridSize/2,
+                food.y * gridSize + gridSize/2,
+                gridSize/2 - 1,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Add shine effect to food
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.beginPath();
+            ctx.arc(
+                food.x * gridSize + gridSize/3,
+                food.y * gridSize + gridSize/3,
+                gridSize/6,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Draw power-ups
+            powerUps.forEach(powerUp => {
+                let color1, color2, symbol;
+                
+                switch (powerUp.type) {
+                    case POWER_UP_TYPES.SPEED_BOOST:
+                        color1 = '#ff0000';
+                        color2 = '#ff9900';
+                        symbol = '⚡';
+                        break;
+                    case POWER_UP_TYPES.SLOW_DOWN:
+                        color1 = '#0000ff';
+                        color2 = '#00ffff';
+                        symbol = '🐢';
+                        break;
+                    case POWER_UP_TYPES.EXTRA_POINTS:
+                        color1 = '#ffff00';
+                        color2 = '#ff00ff';
+                        symbol = '💎';
+                        break;
+                    case POWER_UP_TYPES.SHIELD:
+                        color1 = '#00ff00';
+                        color2 = '#008000';
+                        symbol = '🛡️';
+                        break;
+                }
+                
+                const powerUpGradient = ctx.createRadialGradient(
+                    powerUp.x * gridSize + gridSize/2,
+                    powerUp.y * gridSize + gridSize/2,
+                    1,
+                    powerUp.x * gridSize + gridSize/2,
+                    powerUp.y * gridSize + gridSize/2,
+                    gridSize/2
+                );
+                powerUpGradient.addColorStop(0, color1);
+                powerUpGradient.addColorStop(1, color2);
+                
+                ctx.fillStyle = powerUpGradient;
+                ctx.beginPath();
+                ctx.arc(
+                    powerUp.x * gridSize + gridSize/2,
+                    powerUp.y * gridSize + gridSize/2,
+                    gridSize/2 - 1,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+                
+                // Draw symbol
+                ctx.fillStyle = 'white';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(
+                    symbol,
+                    powerUp.x * gridSize + gridSize/2,
+                    powerUp.y * gridSize + gridSize/2
+                );
+            });
+        }
+        
+        // Update game state
+        function update() {
+            if (gamePaused) return;
+            
+            // Update particles
+            updateParticles();
+            
+            // Update power-up timers
+            for (let i = powerUps.length - 1; i >= 0; i--) {
+                powerUps[i].timer--;
+                if (powerUps[i].timer <= 0) {
+                    powerUps.splice(i, 1);
+                }
+            }
+            
+            // Update shield timer
+            if (shieldActive) {
+                shieldTimer--;
+                if (shieldTimer <= 0) {
+                    shieldActive = false;
+                }
+            }
+            
+            // Calculate new head position
+            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            
+            // Check collision with walls (unless shield is active)
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                if (!shieldActive) {
+                    gameOver();
+                    return;
+                } else {
+                    // Bounce off walls
+                    if (head.x < 0) head.x = tileCount - 1;
+                    if (head.x >= tileCount) head.x = 0;
+                    if (head.y < 0) head.y = tileCount - 1;
+                    if (head.y >= tileCount) head.y = 0;
+                }
+            }
+            
+            // Check collision with self (FIXED: Properly checks all segments including head)
+            for (let i = 0; i < snake.length; i++) {
+                if (snake[i].x === head.x && snake[i].y === head.y) {
+                    // Only game over if it's not the head itself (i > 0 means it's hitting its body)
+                    if (i > 0 && !shieldActive) {
+                        gameOver();
+                        return;
+                    }
+                }
+            }
+            
+            // Add new head
+            snake.unshift(head);
+            
+            // Check if food is eaten
+            if (head.x === food.x && head.y === food.y) {
+                // Create particle effect
+                createParticles(food.x, food.y, '#ff9900', 20);
+                
+                // Increase score
+                let points = 10 * level;
+                if (speedBoostActive) points *= 2;
+                score += points;
+                foodEaten++;
+                
+                // Set growth pending (snake will grow by 1 segment)
+                growthPending += 1;
+                
+                currentScoreElement.textContent = score;
+                lengthElement.textContent = snake.length + growthPending;
+                
+                // Update top score if needed
+                if (score > topScore) {
+                    topScore = score;
+                    topScoreElement.textContent = topScore;
+                    localStorage.setItem('ultraSnakeTopScore', topScore);
+                }
+                
+                // Level up every 5 foods
+                if (foodEaten % 5 === 0) {
+                    level++;
+                    levelElement.textContent = level;
+                    currentLevelElement.textContent = level;
+                    
+                    // Increase speed
+                    speed = Math.max(50, baseSpeed - (level - 1) * 10);
+                    updateSpeedDisplay();
+                }
+                
+                // Place new food and power-up
+                placeFood();
+                placePowerUp();
+            } else {
+                // Remove tail only if no growth pending
+                if (growthPending > 0) {
+                    growthPending--;
+                } else {
+                    snake.pop();
+                }
+                lengthElement.textContent = snake.length;
+            }
+            
+            // Check if power-up is collected
+            for (let i = powerUps.length - 1; i >= 0; i--) {
+                const powerUp = powerUps[i];
+                if (head.x === powerUp.x && head.y === powerUp.y) {
+                    // Create particle effect
+                    createParticles(powerUp.x, powerUp.y, '#00ffff', 15);
+                    
+                    // Apply power-up effect
+                    switch (powerUp.type) {
+                        case POWER_UP_TYPES.SPEED_BOOST:
+                            speedBoostActive = true;
+                            slowDownActive = false;
+                            setTimeout(() => speedBoostActive = false, 5000);
+                            speed = Math.max(30, speed * 0.7);
+                            updateSpeedDisplay();
+                            break;
+                        case POWER_UP_TYPES.SLOW_DOWN:
+                            slowDownActive = true;
+                            speedBoostActive = false;
+                            setTimeout(() => slowDownActive = false, 5000);
+                            speed = Math.min(200, speed * 1.5);
+                            updateSpeedDisplay();
+                            break;
+                        case POWER_UP_TYPES.EXTRA_POINTS:
+                            score += 50 * level;
+                            currentScoreElement.textContent = score;
+                            if (score > topScore) {
+                                topScore = score;
+                                topScoreElement.textContent = topScore;
+                                localStorage.setItem('ultraSnakeTopScore', topScore);
+                            }
+                            break;
+                        case POWER_UP_TYPES.SHIELD:
+                            shieldActive = true;
+                            shieldTimer = 300; // 5 seconds at 60fps
+                            break;
+                    }
+                    
+                    // Remove power-up
+                    powerUps.splice(i, 1);
+                }
+            }
+        }
+        
+        // Update speed display
+        function updateSpeedDisplay() {
+            if (speedBoostActive) {
+                currentSpeedElement.textContent = 'Fast';
+                currentSpeedElement.style.color = '#ff0000';
+            } else if (slowDownActive) {
+                currentSpeedElement.textContent = 'Slow';
+                currentSpeedElement.style.color = '#0000ff';
+            } else {
+                currentSpeedElement.textContent = 'Normal';
+                currentSpeedElement.style.color = '#00ffff';
+            }
+        }
+        
+        // Game loop
+        function gameStep() {
+            update();
+            draw();
+        }
+        
+        // Start game
+        function startGame() {
+            if (!gameRunning) {
+                initGame();
+                gameRunning = true;
+                gamePaused = false;
+                gameLoop = setInterval(gameStep, speed);
+                startBtn.textContent = "RESTART";
+                pauseBtn.textContent = "PAUSE";
+            } else {
+                restartGame();
+            }
+        }
+        
+        // Pause game
+        function pauseGame() {
+            if (gameRunning) {
+                gamePaused = !gamePaused;
+                pauseBtn.textContent = gamePaused ? "RESUME" : "PAUSE";
+            }
+        }
+        
+        // Restart game
+        function restartGame() {
+            clearInterval(gameLoop);
+            initGame();
+            gamePaused = false;
+            pauseBtn.textContent = "PAUSE";
+            gameLoop = setInterval(gameStep, speed);
+        }
+        
+        // Game over
+        function gameOver() {
+            clearInterval(gameLoop);
+            gameRunning = false;
+            finalScoreElement.textContent = score;
+            finalLevelElement.textContent = level;
+            gameOverElement.classList.add('show');
+        }
+        
+        // Handle keyboard input
+        function handleKeydown(e) {
+            // Prevent arrow keys from scrolling the page
+            if ([37, 38, 39, 40, 32, 82].includes(e.keyCode)) {
+                e.preventDefault();
+            }
+            
+            // Only change direction if game is running and not paused
+            if (!gameRunning || gamePaused) return;
+            
+            switch(e.keyCode) {
+                case 38: // Up arrow
+                    if (dy === 0) { // Prevent 180-degree turns
+                        dx = 0;
+                        dy = -1;
+                    }
+                    break;
+                case 40: // Down arrow
+                    if (dy === 0) {
+                        dx = 0;
+                        dy = 1;
+                    }
+                    break;
+                case 37: // Left arrow
+                    if (dx === 0) {
+                        dx = -1;
+                        dy = 0;
+                    }
+                    break;
+                case 39: // Right arrow
+                    if (dx === 0) {
+                        dx = 1;
+                        dy = 0;
+                    }
+                    break;
+                case 32: // Spacebar
+                    pauseGame();
+                    break;
+                case 82: // R key
+                    if (!gameRunning) {
+                        startGame();
+                    }
+                    break;
+            }
+        }
+        
+        // Modal functions
+        function showHelpModal() {
+            helpModal.classList.add('show');
+        }
+        
+        function hideHelpModal() {
+            helpModal.classList.remove('show');
+        }
+        
+        // Event listeners
+        document.addEventListener('keydown', handleKeydown);
+        startBtn.addEventListener('click', startGame);
+        pauseBtn.addEventListener('click', pauseGame);
+        restartBtn.addEventListener('click', restartGame);
+        playAgainBtn.addEventListener('click', startGame);
+        helpBtn.addEventListener('click', showHelpModal);
+        closeModal.addEventListener('click', hideHelpModal);
+        
+        // Close modal when clicking outside
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) {
+                hideHelpModal();
+            }
+        });
+        
+        // Initialize top score display
+        topScoreElement.textContent = topScore;
+        
+        // Add rounded rect function to CanvasRenderingContext2D
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+            if (width < 2 * radius) radius = width / 2;
+            if (height < 2 * radius) radius = height / 2;
+            this.beginPath();
+            this.moveTo(x + radius, y);
+            this.arcTo(x + width, y, x + width, y + height, radius);
+            this.arcTo(x + width, y + height, x, y + height, radius);
+            this.arcTo(x, y + height, x, y, radius);
+            this.arcTo(x, y, x + width, y, radius);
+            this.closePath();
+            return this;
+        };
+        
+        // Initial draw
+        initGame();
+        draw();
+    </script>
+</body>
+</html>
